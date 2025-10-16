@@ -16,6 +16,7 @@
 
 #define  MAXCHANNELS (MAXRELAYS/2)
 
+bool init_rs(void);
 bool set_rs_up(uint8_t rs);
 bool set_rs_down(uint8_t rs);
 bool set_rs_stop(uint8_t rs);

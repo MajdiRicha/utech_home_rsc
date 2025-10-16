@@ -16,7 +16,7 @@
 #include "scheduler.h"
 #include "shab.h"
 #include "settings.h"
-#include "relay.h"
+#include "rs.h"
 
 void main()
 {
@@ -33,7 +33,7 @@ void main()
         ret &= init_system();       /*initialize system and create task(s)*/
         ret &= init_settings();     /*initialize settings and create task(s)*/
         ret &= init_shab();         /*initialize SHAB communication and create task(s)*/
-        ret &= init_relays();       /*initialize relays and create task(s)*/
+        ret &= init_rs();           /*initialize shutters and create task(s)*/
         
         if (true == ret)    /*success?*/
         {

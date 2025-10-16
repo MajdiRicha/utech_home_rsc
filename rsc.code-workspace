@@ -19,7 +19,8 @@
 			"int_eeprom.h": "c",
 			"version.h": "c",
 			"scheduler.h": "c",
-			"system.h": "c"
+			"system.h": "c",
+			"rs.h": "c"
 		},
 		"C_Cpp.default.defines": [
 			"__PCH__"

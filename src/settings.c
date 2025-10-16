@@ -78,7 +78,7 @@ void save_default_settings(void)
 {
     uint8_t i;
 
-    curr_settings.dev_instance = 0xFF;
+    //curr_settings.dev_instance = 0xFF;    //KEEP WHATEVER IT WAS
 
     for (i=0; i<MAXCHANNELS; i++)
     {

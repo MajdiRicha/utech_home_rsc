@@ -14,6 +14,10 @@
 #include "rs.h"
 #include "shab_profile.h"
 #include "settings.h"
+#include "scheduler.h"
+
+//Ptotos:
+static void rs_monitor(s_task_handle_t me, s_task_msg_t **msg, void* arg);
 
 /*externs*/
 extern system_settings_t curr_settings;
@@ -25,6 +29,17 @@ static const uint8_t rs_relay_channels[MAXCHANNELS][2] = //Up/Down
    {2,3},
    {4,5}
 };
+
+/**
+ * @brief 
+ * 
+ * @return true 
+ * @return false 
+ */
+bool init_rs(void)
+{
+    return s_task_create(true, S_TASK_NORMAL_PRIORITY, 100, rs_monitor, NULL, NULL);    //runs every 100 ms
+}
 
 /**
  * @brief Set the rs up
@@ -136,11 +151,12 @@ bool get_rs_state_buffer(uint8_t rs_idx, uint8_t *shab_buff, shab_device_t dest_
 void compresss_rs_states_buffer(uint8_t *shab_buff, shab_device_t dest_dev, uint8_t dest_instance)
 {
     uint8_t rs_idx;
-    uint16_t rs_states = 0;
+    uint16_t rs_sts = 0;
 
     for (rs_idx = 0; rs_idx < MAXCHANNELS; rs_idx++)
     {
-        
+        rs_sts <<= 2;
+        rs_sts |= rs_states[MAXCHANNELS - rs_idx - 1];  //in reverse order
     }
 
     shab_buff[SHAB_MSG_LENGTH] = 11;
@@ -151,6 +167,18 @@ void compresss_rs_states_buffer(uint8_t *shab_buff, shab_device_t dest_dev, uint
     shab_buff[SHAB_COMMAND] = SHAB_W;
     shab_buff[SHAB_FUNCTION] = RSC_RS_F;
     shab_buff[SHAB_PARAM + 0] = MAXCHANNELS;
-    shab_buff[SHAB_PARAM + 1] = make8(rs_states, 0); /*lsb*/
-    shab_buff[SHAB_PARAM + 2] = make8(rs_states, 1); /*msb*/
+    shab_buff[SHAB_PARAM + 1] = make8(rs_sts, 0); /*lsb*/
+    shab_buff[SHAB_PARAM + 2] = make8(rs_sts, 1); /*msb*/
+}
+
+/**
+ * @brief 
+ * 
+ * @param me 
+ * @param msg 
+ * @param arg 
+ */
+static void rs_monitor(s_task_handle_t me, s_task_msg_t **msg, void* arg)
+{
+
 }

@@ -1,0 +1,31 @@
+/**
+ * @file shab_profile.h
+ * @author Majdi Richa (majdi.richa@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 2025-10-15
+ * 
+ * @copyright
+ * 2025 utech Lebanon ALL RIGHTS RESERVED.
+ * 
+ */
+#ifndef   SHABPROFILE_H
+#define   SHABPROFILE_H
+///////////////////////////////////////////////////////////////////////////////
+#include "..\..\common\devices.h"
+///////////////////////////////////////////////////////////////////////////////
+#define  DEVICE_ID          RSC_D
+//#define  DeviceInstance CurrentSystemSettings.DeviceInst	//(int8)(PORTB & 0x07)
+///////////////////////////////////////////////////////////////////////////////
+#define RS_DE_RE_PIN        PIN_C1  /*DE_RE pin*/
+#define RS_RX_PIN           PIN_C0  /*Sense pin*/
+///////////////////////////////////////////////////////////////////////////////
+#define SHAB_IDLE()        input(RS_RX_PIN)
+#define SHAB_TX_ENABLE()   output_high(RS_DE_RE_PIN)
+#define SHAB_RX_ENABLE()   output_low(RS_DE_RE_PIN)
+///////////////////////////////////////////////////////////////////////////////
+//Select UART port:
+#define  SHAB_PORT_1
+
+///////////////////////////////////////////////////////////////////////////////
+#endif

@@ -1,0 +1,37 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"main.h": "c",
+			"18f26k22.h": "c",
+			"shab.h": "c",
+			"shab_profile.h": "c",
+			"devices.h": "c",
+			"initializer_list": "c",
+			"type_traits": "c",
+			"xutility": "c",
+			"settings.h": "c",
+			"relay.h": "c",
+			"int_eeprom.h": "c",
+			"version.h": "c",
+			"scheduler.h": "c",
+			"system.h": "c"
+		},
+		"C_Cpp.default.defines": [
+			"__PCH__"
+		],
+		"C_Cpp.default.includePath": [
+			"C:\\Program Files (x86)\\PICC\\Devices",
+			"C:\\Program Files (x86)\\PICC\\Drivers"
+		],
+		"doxdocgen.generic.authorEmail": "majdi.richa@gmail.com",
+		"doxdocgen.file.copyrightTag": [
+			"@copyright\n2025 utech Lebanon ALL RIGHTS RESERVED."
+		],
+		"cSpell.enabled": false
+	}
+}

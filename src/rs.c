@@ -16,6 +16,9 @@
 #include "settings.h"
 #include "scheduler.h"
 
+#define RS_MON_RATE     (100)               //ms
+#define RS_MON_K        (1000/RS_MON_RATE)
+
 //Ptotos:
 static void rs_monitor(s_task_handle_t me, s_task_msg_t **msg, void* arg);
 
@@ -23,7 +26,7 @@ static void rs_monitor(s_task_handle_t me, s_task_msg_t **msg, void* arg);
 extern system_settings_t curr_settings;
 
 static rsc_rs_param_t rs_states[MAXCHANNELS]={RSC_RS_STOP, RSC_RS_STOP, RSC_RS_STOP};
-static const uint8_t rs_relay_channels[MAXCHANNELS][2] = //Up/Down
+static const uint8_t rs_relay_channels[MAXCHANNELS][2] =    //Up/Down
 {
    {0,1},
    {2,3},
@@ -38,7 +41,7 @@ static const uint8_t rs_relay_channels[MAXCHANNELS][2] = //Up/Down
  */
 bool init_rs(void)
 {
-    return s_task_create(true, S_TASK_NORMAL_PRIORITY, 100, rs_monitor, NULL, NULL);    //runs every 100 ms
+    return s_task_create(true, S_TASK_NORMAL_PRIORITY, RS_MON_RATE, rs_monitor, NULL, NULL);    //runs every RS_MON_RATE ms
 }
 
 /**
@@ -54,15 +57,7 @@ bool set_rs_up(uint8_t rs)
 
     if (rs_states[rs] != RSC_RS_UP)
     {
-        if (get_relay_state(rs_relay_channels[rs][1]) == 1) //On?
-        {
-            ret = set_relay_off(rs_relay_channels[rs][1]);  //turn it off
-        }
-        if (ret)
-        {
-            ret = set_relay_on(rs_relay_channels[rs][0]);
-            rs_states[rs] = RSC_RS_UP;
-        }
+        rs_states[rs] = RSC_RS_UP;
     }
 
     return ret;
@@ -81,15 +76,7 @@ bool set_rs_down(uint8_t rs)
 
     if (rs_states[rs] != RSC_RS_DOWN)
     {
-        if (get_relay_state(rs_relay_channels[rs][0]) == 1) //On?
-        {
-            ret = set_relay_off(rs_relay_channels[rs][0]);  //turn it off
-        }
-        if (ret)
-        {
-            ret = set_relay_on(rs_relay_channels[rs][1]);
-            rs_states[rs] = RSC_RS_DOWN;
-        }
+        rs_states[rs] = RSC_RS_DOWN;
     }
 
     return ret;
@@ -106,7 +93,7 @@ bool set_rs_stop(uint8_t rs)
 {
     if (rs_states[rs] != RSC_RS_STOP)
     {
-        return ((set_relay_off(rs_relay_channels[rs][0])) && (set_relay_off(rs_relay_channels[rs][1])));
+        rs_states[rs] = RSC_RS_STOP;
     }
 
     return true;
@@ -180,5 +167,80 @@ void compresss_rs_states_buffer(uint8_t *shab_buff, shab_device_t dest_dev, uint
  */
 static void rs_monitor(s_task_handle_t me, s_task_msg_t **msg, void* arg)
 {
+    static rsc_rs_param_t rs_sts_hist[MAXCHANNELS]={RSC_RS_STOP, RSC_RS_STOP, RSC_RS_STOP};
+    static uint16_t rs_cnt_dwn[MAXCHANNELS];
+    uint8_t ch_idx;
 
+    for (ch_idx=0; ch_idx<MAXCHANNELS; ch_idx++)
+    {
+        if (rs_sts_hist[ch_idx] != rs_states[ch_idx])                   //State changed?
+        {
+            switch(rs_states[ch_idx])
+            {
+                case RSC_RS_STOP:
+                    if (rs_sts_hist[ch_idx] != RSC_RS_STOP)             //was it moving?
+                    {
+                        //Do it:
+                        set_relay_off(rs_relay_channels[ch_idx][1]);    //OFF
+                        set_relay_off(rs_relay_channels[ch_idx][0]);    //OFF
+                        
+                        rs_sts_hist[ch_idx] = RSC_RS_STOP;              //Update history
+                    }
+                break;
+
+                case RSC_RS_UP:
+                    if (RSC_RS_STOP == rs_sts_hist[ch_idx])             //was it stopped?
+                    {
+                        //Do it:
+                        set_relay_off(rs_relay_channels[ch_idx][1]);    //OFF (just in case)
+                        set_relay_on(rs_relay_channels[ch_idx][0]);     //ON
+                        
+                        //Arm count down:
+                        rs_cnt_dwn[ch_idx] = (curr_settings.rs_up_time[ch_idx] * RS_MON_K);
+                        rs_sts_hist[ch_idx] = RSC_RS_UP;                //Update history
+                    }
+                    else                                                //was going down?
+                    {
+                        //Stop it:
+                        set_relay_off(rs_relay_channels[ch_idx][1]);    //OFF
+                        set_relay_off(rs_relay_channels[ch_idx][0]);    //OFF
+                        rs_sts_hist[ch_idx] = RSC_RS_STOP;              //Force one cycle delay
+                    }
+                break;
+
+                case RSC_RS_DOWN:
+                    if (RSC_RS_STOP == rs_sts_hist[ch_idx])             //was it stopped?
+                    {
+                        //Do it:
+                        set_relay_off(rs_relay_channels[ch_idx][0]);    //OFF (just in case)
+                        set_relay_on(rs_relay_channels[ch_idx][1]);     //ON
+                        
+                        //Arm count down:
+                        rs_cnt_dwn[ch_idx] = (curr_settings.rs_dn_time[ch_idx] * RS_MON_K);
+                        rs_sts_hist[ch_idx] = RSC_RS_DOWN;              //Update history
+                    }
+                    else                                                //was going up?
+                    {
+                        //Stop it:
+                        set_relay_off(rs_relay_channels[ch_idx][1]);    //OFF
+                        set_relay_off(rs_relay_channels[ch_idx][0]);    //OFF
+                        rs_sts_hist[ch_idx] = RSC_RS_STOP;              //Force one cycle delay
+                    }
+                break;
+            }
+        }
+        else                                                            //No change and moving?
+        {
+            switch(rs_states[ch_idx])
+            {
+                case RSC_RS_UP:
+                case RSC_RS_DOWN:
+                    if (--rs_cnt_dwn[ch_idx] == 0)                      //Should stop?
+                    {
+                        rs_states[ch_idx] = RSC_RS_STOP;
+                    }
+                break;
+            }
+        }
+    }
 }

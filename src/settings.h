@@ -32,6 +32,8 @@ typedef struct system_settings
 #define EE_SETTINGS_OFFSET  0x000
 #define EE_SETTINGS_VALID   0xA5
 
+#define RS_UP_TIME  (30)    //seconds
+#define RS_DN_TIME  (30)    //seconds
 
 bool init_settings(void);
 uint8_t ee_calculate_checksum(uint8_t *dt_buff, uint16_t count);

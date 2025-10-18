@@ -12,6 +12,7 @@
 
 #include "main.h"
 #include "rs.h"
+#include "shab.h"
 #include "shab_profile.h"
 #include "settings.h"
 #include "scheduler.h"
@@ -202,6 +203,7 @@ static void rs_monitor(s_task_handle_t me, s_task_msg_t **msg, void* arg)
     static rsc_rs_param_t rs_sts_hist[MAXCHANNELS]={RSC_RS_STOP, RSC_RS_STOP, RSC_RS_STOP};
     static uint16_t rs_cnt_dwn[MAXCHANNELS];
     uint8_t ch_idx;
+    uint8_t brdcst_msg[10];
 
     for (ch_idx=0; ch_idx<MAXCHANNELS; ch_idx++)
     {
@@ -217,6 +219,10 @@ static void rs_monitor(s_task_handle_t me, s_task_msg_t **msg, void* arg)
                         set_relay_off(rs_relay_channels[ch_idx][0]);    //OFF
                         
                         rs_sts_hist[ch_idx] = RSC_RS_STOP;              //Update history
+
+                        //Broadcast relay state:
+                        get_rs_state_buffer(ch_idx, brdcst_msg, make8(BROADCAST_ADDRESS, 1), make8(BROADCAST_ADDRESS, 0));
+                        shab_send_msg(brdcst_msg);  /*Send it*/
                     }
                 break;
 

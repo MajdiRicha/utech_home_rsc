@@ -83,8 +83,8 @@ void save_default_settings(void)
     for (i=0; i<MAXCHANNELS; i++)
     {
         curr_settings.dev_state[i] = RSC_RS_STOP;   //all stopped
-        curr_settings.rs_up_time[i] = 60;           //60 seconds
-        curr_settings.rs_dn_time[i] = 60;           //60 seconds
+        curr_settings.rs_up_time[i] = RS_UP_TIME;   //Up time
+        curr_settings.rs_dn_time[i] = RS_DN_TIME;   //Down time
     }
 
     curr_settings.data_valid = EE_SETTINGS_VALID;

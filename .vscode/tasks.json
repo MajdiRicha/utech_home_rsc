@@ -7,6 +7,7 @@
             "command": "ccsc.exe",
             "args": [
             "+FH",
+            "+DF",
             "+STDOUT",
             "BUILD=rsc.ccspjt"],
             "options": {

@@ -80,7 +80,7 @@ void shab_process_packet(s_task_handle_t me, s_task_msg_t **msg, void* arg)
 {
     shab_command_t curr_cmd;
     shab_dcoc_func_t curr_func;
-    uint8_t p0, p1;
+    uint8_t p0, p1, p2;
 
     if (shab_rx_buffer_rdy())   /*ready and valid?*/
     {
@@ -93,6 +93,7 @@ void shab_process_packet(s_task_handle_t me, s_task_msg_t **msg, void* arg)
             {
                 p0 = shab_rx_buffer[SHAB_PARAM + 0];    /*get 1st param*/
                 p1 = shab_rx_buffer[SHAB_PARAM + 1];    /*get 2nd param*/
+                p2 = shab_rx_buffer[SHAB_PARAM + 2];    /*get 3rd param*/
 
                 switch(curr_func)
                 {
@@ -121,6 +122,7 @@ void shab_process_packet(s_task_handle_t me, s_task_msg_t **msg, void* arg)
                                     case RSC_RS_STOP:
                                         if (set_rs_stop(p0))
                                         {
+                                            /*Construct reply*/
                                             get_rs_state_buffer(p0, shab_tx_buffer, shab_rx_buffer[SHAB_SOURCE_ID], shab_rx_buffer[SHAB_SOURCE_INSTANCE]);
                                         }
                                         else
@@ -132,6 +134,7 @@ void shab_process_packet(s_task_handle_t me, s_task_msg_t **msg, void* arg)
                                     case RSC_RS_UP:
                                         if (set_rs_up(p0))
                                         {
+                                            /*Construct reply*/
                                             get_rs_state_buffer(p0, shab_tx_buffer, shab_rx_buffer[SHAB_SOURCE_ID], shab_rx_buffer[SHAB_SOURCE_INSTANCE]);
                                         }
                                         else
@@ -143,6 +146,7 @@ void shab_process_packet(s_task_handle_t me, s_task_msg_t **msg, void* arg)
                                     case RSC_RS_DOWN:
                                         if (set_rs_down(p0))
                                         {
+                                            /*Construct reply*/
                                             get_rs_state_buffer(p0, shab_tx_buffer, shab_rx_buffer[SHAB_SOURCE_ID], shab_rx_buffer[SHAB_SOURCE_INSTANCE]);
                                         }
                                         else
@@ -159,13 +163,49 @@ void shab_process_packet(s_task_handle_t me, s_task_msg_t **msg, void* arg)
                                     break;
                                 }
                             break;
+
+                            default:
+                                shab_ack_nack_buffer(shab_rx_buffer, shab_tx_buffer, false);    /*NACK*/
+                            break;
                         }
                     break;
 
                     case RSC_RST_F:
-                        //CR - P0: RS nb; P1: Up time; P2: Down time (in seconds)
+                        //CW/R - P0: RS nb; P1: Up time; P2: Down time (in seconds)
                         //W - Save settings to EEPROM
+                        switch(curr_cmd)
+                        {
+                            case SHAB_CR:   //read timers
+                                /*Construct reply*/
+                                if (!get_rs_timer_buffer(p0, shab_tx_buffer, shab_rx_buffer[SHAB_SOURCE_ID], shab_rx_buffer[SHAB_SOURCE_INSTANCE]))
+                                {
+                                    shab_ack_nack_buffer(shab_rx_buffer, shab_tx_buffer, false);    /*NACK*/
+                                }
+                            break;
+                        
+                            case SHAB_CW:   //write timers
+                                if (p0 < MAXCHANNELS)
+                                {
+                                    curr_settings.rs_up_time[p0] = p1;
+                                    curr_settings.rs_dn_time[p0] = p2;
+                                    /*Construct reply*/
+                                    get_rs_timer_buffer(p0, shab_tx_buffer, shab_rx_buffer[SHAB_SOURCE_ID], shab_rx_buffer[SHAB_SOURCE_INSTANCE]);
+                                }
+                                else
+                                {
+                                    shab_ack_nack_buffer(shab_rx_buffer, shab_tx_buffer, false);    /*NACK*/
+                                }
+                            break;
 
+                            case SHAB_W:    //save timers to EEPROM
+                                shab_ack_nack_buffer(shab_rx_buffer, shab_tx_buffer, true);    /*ACK*/
+                                save_settings();    /*save settings*/
+                            break;
+
+                            default:
+                                shab_ack_nack_buffer(shab_rx_buffer, shab_tx_buffer, false);    /*NACK*/
+                            break;
+                        }
                     break;
 
                     /*Universal:*/

@@ -53,14 +53,14 @@ bool init_rs(void)
  */
 bool set_rs_up(uint8_t rs)
 {
-    bool ret = true;
+    if (rs >= MAXCHANNELS)  {return false;}
 
     if (rs_states[rs] != RSC_RS_UP)
     {
         rs_states[rs] = RSC_RS_UP;
     }
 
-    return ret;
+    return true;
 }
 
 /**
@@ -72,14 +72,14 @@ bool set_rs_up(uint8_t rs)
  */
 bool set_rs_down(uint8_t rs)
 {
-    bool ret = true;
+    if (rs >= MAXCHANNELS)  {return false;}
 
     if (rs_states[rs] != RSC_RS_DOWN)
     {
         rs_states[rs] = RSC_RS_DOWN;
     }
 
-    return ret;
+    return true;
 }
 
 /**
@@ -91,6 +91,8 @@ bool set_rs_down(uint8_t rs)
  */
 bool set_rs_stop(uint8_t rs)
 {
+    if (rs >= MAXCHANNELS)  {return false;}
+
     if (rs_states[rs] != RSC_RS_STOP)
     {
         rs_states[rs] = RSC_RS_STOP;
@@ -111,7 +113,7 @@ bool set_rs_stop(uint8_t rs)
  */
 bool get_rs_state_buffer(uint8_t rs_idx, uint8_t *shab_buff, shab_device_t dest_dev, uint8_t dest_instance)
 {
-    if (rs_idx < MAXRELAYS)    /*valid relay?*/
+    if (rs_idx < MAXCHANNELS)    /*valid channel?*/
     {
         shab_buff[SHAB_MSG_LENGTH] = 10;
         shab_buff[SHAB_SOURCE_ID] = DEVICE_ID;
@@ -156,6 +158,36 @@ void compresss_rs_states_buffer(uint8_t *shab_buff, shab_device_t dest_dev, uint
     shab_buff[SHAB_PARAM + 0] = MAXCHANNELS;
     shab_buff[SHAB_PARAM + 1] = make8(rs_sts, 0); /*lsb*/
     shab_buff[SHAB_PARAM + 2] = make8(rs_sts, 1); /*msb*/
+}
+
+/**
+ * @brief Get the rs timer buffer
+ * 
+ * @param rs_idx 
+ * @param shab_buff 
+ * @param dest_dev 
+ * @param dest_instance 
+ * @return true 
+ * @return false 
+ */
+bool get_rs_timer_buffer(uint8_t rs_idx, uint8_t *shab_buff, shab_device_t dest_dev, uint8_t dest_instance)
+{
+    if (rs_idx < MAXCHANNELS)    /*valid channel?*/
+    {
+        shab_buff[SHAB_MSG_LENGTH] = 11;
+        shab_buff[SHAB_SOURCE_ID] = DEVICE_ID;
+        shab_buff[SHAB_SOURCE_INSTANCE] = curr_settings.dev_instance;
+        shab_buff[SHAB_DESTINATION_ID] = dest_dev;
+        shab_buff[SHAB_DESTINATION_INSTANCE] = dest_instance;
+        shab_buff[SHAB_COMMAND] = SHAB_CW;
+        shab_buff[SHAB_FUNCTION] = RSC_RST_F;
+        shab_buff[SHAB_PARAM + 0] = rs_idx;
+        shab_buff[SHAB_PARAM + 1] = curr_settings.rs_up_time[rs_idx];
+        shab_buff[SHAB_PARAM + 2] = curr_settings.rs_dn_time[rs_idx];
+
+        return true;
+    }
+    return false;
 }
 
 /**

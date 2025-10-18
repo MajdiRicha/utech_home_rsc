@@ -22,5 +22,6 @@ bool set_rs_down(uint8_t rs);
 bool set_rs_stop(uint8_t rs);
 bool get_rs_state_buffer(uint8_t rs_idx, uint8_t *shab_buff, shab_device_t dest_dev, uint8_t dest_instance);
 void compresss_rs_states_buffer(uint8_t *shab_buff, shab_device_t dest_dev, uint8_t dest_instance);
+bool get_rs_timer_buffer(uint8_t rs_idx, uint8_t *shab_buff, shab_device_t dest_dev, uint8_t dest_instance);
 
 #endif

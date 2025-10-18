@@ -158,6 +158,6 @@ static void ee_comp_write(s_task_handle_t me, s_task_msg_t **msg, void* arg)
     {
         s_task_suspend(me);
         ee_pointer = EE_SETTINGS_OFFSET;            /*Reset EE pointer*/
-        set_buff_ptr = (uint8_t*)&curr_settings;    /*Reset seetings pointer*/
+        set_buff_ptr = (uint8_t*)&curr_settings;    /*Reset settings pointer*/
     }
 }
